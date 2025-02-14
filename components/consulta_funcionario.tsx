@@ -1,10 +1,11 @@
 "use client";
 import React, { useState } from "react";
+import MatriculaInput from "../components/matriculaInput"
 
 const funcionarios = [
-    { matricula: "0000", nome: "João Silva",gerencia: "GAF" ,cargo: "Assistente", ferias: "Em aberto" },
-    { matricula: "1111", nome: "Maria Santos",gerencia: "GFTM",cargo: "Gerente", ferias: "Solicitada" },
-    { matricula: "2222", nome: "Carlos Souza",gerencia: "GIF",cargo: "Analista", ferias: "Aprovada" },
+    { matricula: "000000", nome: "João Silva Da Silva",gerencia: "GAF" ,cargo: "Assistente", ferias: "Em aberto", dias: "25" },
+    { matricula: "111111", nome: "Maria Santos Da Silva",gerencia: "GFTM",cargo: "Gerente", ferias: "Solicitada", dias: "30" },
+    { matricula: "222222", nome: "Carlos Souza Da Silva",gerencia: "GIF",cargo: "Analista", ferias: "Aprovada", dias: "15" },
 ];
 
 const ConsultaFuncionario: React.FC = () => {
@@ -31,12 +32,9 @@ const ConsultaFuncionario: React.FC = () => {
         <h1 className="text-2xl font-bold mb-4">Consulta de Funcionário</h1>
 
         <div className="flex space-x-2">
-            <input
-                type="text"
-                placeholder="Digite a matrícula"
+            <MatriculaInput
                 value={matricula}
                 onChange={(e) => setMatricula(e.target.value)}
-                className="border p-2 w-full rounded bg-gray-300 text-black placeholder-black" // Input cinza e texto preto
                 />
                 <button
                         onClick={buscarFuncionario}
@@ -56,6 +54,7 @@ const ConsultaFuncionario: React.FC = () => {
                         <p><strong>Matrícula: </strong> {resultado.matricula}</p>
                         <p><strong>Gerência: </strong> {resultado.gerencia}</p>
                         <p><strong>Cargo: </strong> {resultado.cargo}</p>
+                        <p><strong>Dias: </strong> {resultado.dias}</p>
                         <p><strong>Ferias: </strong> {resultado.ferias}</p>
                     </div>
                 )}
