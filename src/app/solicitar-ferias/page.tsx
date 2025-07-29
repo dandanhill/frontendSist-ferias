@@ -4,8 +4,7 @@ import Header from "../../../components/Header";
 const SolicitarFeriasPage = () => {
     return (
         <div className="Ferias">
-            <Header />
-            <div className="p-6 bg-white">
+            <div className="min-h-screen align-items bg-gray-500">
                 <SolicitarFerias /> {/* Chama o componente correto */}
             </div>
         </div>
