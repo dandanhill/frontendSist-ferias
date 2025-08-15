@@ -2,13 +2,16 @@
 
 import React, { useState } from "react";
 import Header from "../components/Header";
-import Input from "./input/input";   // Certifique-se que o Input esteja corretamente importado
+import Input from "./input/input";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
-const AlterarSenha: React.FC = () => {
+const AlterarSenha: React.FC<{ matricula: string }> = ({ matricula }) => {
   const [form, setForm] = useState({
     novaSenha: "",
     confirmeSenha: ""
   });
+  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -18,7 +21,7 @@ const AlterarSenha: React.FC = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (form.novaSenha !== form.confirmeSenha) {
@@ -26,10 +29,18 @@ const AlterarSenha: React.FC = () => {
       return;
     }
 
-    // Lógica para alterar a senha, exemplo:
+    try {
+      await axios.post("http://localhost:3001/nova-senha", {
+        matricula,
+        novaSenha: form.novaSenha
+      });
 
-    console.log("Nova Senha:", form.novaSenha);
-    alert("Senha alterada com sucesso!");
+      alert("Senha alterada com sucesso!");
+      router.push("/login"); // redireciona para login
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao alterar a senha.");
+    }
   };
 
   return (

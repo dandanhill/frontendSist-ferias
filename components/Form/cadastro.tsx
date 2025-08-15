@@ -5,18 +5,15 @@ import Header from "../Header";
 import Input from "../input/input";
 import MatriculaInput from "../input/matriculaInput";
 
-
-
-
 const CadastroFuncionario: React.FC = () => {
   const [form, setForm] = useState({
-    matricula: "",
-    nome: "",
-    cargo: "",
-    telefone: "",
-    cpf: "",
-    email: "",
-    gerencia: "", // aqui deve ser o id da gerência (string que representa número)
+    MATRICULA: "",
+    NOME: "",
+    CARGO: "",
+    TELEFONE: "",
+    CPF: "",
+    EMAIL: "",
+    GERENCIA: "", // aqui deve ser o id da gerência (string que representa número)
   });
 
   const [cargoSugestoes, setCargoSugestoes] = useState<string[]>([]);
@@ -27,10 +24,7 @@ const CadastroFuncionario: React.FC = () => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
 
-
-
   };
-
 
   // Submissão com envio ao backend
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,11 +35,11 @@ const CadastroFuncionario: React.FC = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          matricula: form.matricula,
-          senha: form.matricula, // senha inicial = matricula
-          nome: form.nome,
-          email: form.email,
-          id_gerencia: Number(form.gerencia), // converte para número
+          matricula: form.MATRICULA,
+          senha: form.MATRICULA, // senha inicial = matricula
+          nome: form.NOME,
+          email: form.EMAIL,
+          id_gerencia: Number(form.GERENCIA), // converte para número
         }),
       });
 
@@ -58,13 +52,13 @@ const CadastroFuncionario: React.FC = () => {
       alert("Funcionário cadastrado com sucesso!");
       // Limpar formulário (opcional)
       setForm({
-        matricula: "",
-        nome: "",
-        cargo: "",
-        telefone: "",
-        cpf: "",
-        email: "",
-        gerencia: "",
+        MATRICULA: "",
+        NOME: "",
+        CARGO: "",
+        TELEFONE: "",
+        CPF: "",
+        EMAIL: "",
+        GERENCIA: "",
       });
     } catch (error) {
       console.error("Erro ao conectar com backend:", error);
@@ -81,50 +75,52 @@ const CadastroFuncionario: React.FC = () => {
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <MatriculaInput value={form.matricula} onChange={handleChange} />
+          <MatriculaInput 
+          name="MATRICULA"
+          value={form.MATRICULA} onChange={handleChange} />
 
           <Input
             type="text"
-            id="nome"
-            name="nome"
+            id="NOME"
+            name="NOME"
             placeholder="Digite o nome completo"
-            value={form.nome}
+            value={form.NOME}
             onChange={handleChange}
             required
           />
           <Input
             type="text"
-            id="cpf"
-            name="cpf"
+            id="CPF"
+            name="CPF"
             placeholder="CPF"
-            value={form.cpf}
+            value={form.CPF}
             onChange={handleChange}
             required
           />
           <Input
             type="tel"
-            id="telefone"
-            name="telefone"
+            id="TELEFONE"
+            name="TELEFONE"
             placeholder="Telefone"
-            value={form.telefone}
+            value={form.TELEFONE}
             onChange={handleChange}
             required
           />
           <Input
             type="email"
-            id="email"
-            name="email"
+            id="EMAIL"
+            name="EMAIL"
             placeholder="E-mail"
-            value={form.email}
+            value={form.EMAIL}
             onChange={handleChange}
             required
           />
 
           {/* Troque o input gerencia por select para evitar erro */}
           <select
-            id="gerencia"
-            name="gerencia"
-            value={form.gerencia}
+            id="GERENCIA"
+            name="GERENCIA"
+            value={form.GERENCIA}
             onChange={handleChange}
             required
             className="p-2 w-full  focus:ring-blue-500w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-black"
@@ -159,5 +155,4 @@ const CadastroFuncionario: React.FC = () => {
     </div>
   );
 };
-
 export default CadastroFuncionario;
