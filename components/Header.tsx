@@ -31,7 +31,7 @@ const Header: React.FC = () => {
             </nav>
             <div className="flex items-center space-x-4">
 
-                <Link href="/login" className="flex items-center space-x-2 hover:underline text-black">
+                <Link href="/login" className="flex items-center space-x-2 hover:underline text-[#023472]">
                     <i className="fas fa-sign-out-alt"></i>
                     <span>Sair</span>
                 </Link>

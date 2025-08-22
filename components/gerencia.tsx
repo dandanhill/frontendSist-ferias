@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import Header from './Header';
 import axios from 'axios';
+import { parseISO, format, isValid } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface Gerencia {
   ID_GERENCIA: number;
@@ -19,18 +21,20 @@ interface Funcionario {
   GOZO: string;
   TIPO: string;
   ID_PERIODO?: string | null;
-  MES_FORMATADO?: string; // para filtro/select
-  DIA_EM_MES?: string;    // para exibir na tabela
-  SALDO?: string;         
+  MES_FORMATADO?: string;
+  DIA_EM_MES?: string;
+  SALDO?: string;
+  FIM?: string;
 }
 
 interface Gozo {
-  ID: string,
-  MES: number,             // MES como número
-  TIPO: string,
-  PERCEPCAO: string,
-  ANO: string,
-  SALDO: string
+  ID: string;
+  MES_INICIO: string;   // dd/MM/yyyy
+  MES_FIM: string;      // dd/MM/yyyy
+  TIPO: string;
+  PERCEPCAO: string;
+  ANO: string;
+  SALDO: string;
 }
 
 const Gerencias: React.FC = () => {
@@ -46,53 +50,52 @@ const Gerencias: React.FC = () => {
     "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"
   ];
 
-  const sigla = [
-    "", "GACD", "GAC", "GTI", "GAB SEREC", "2INST", "GFTM", "PFM", "GCONT", "GEPF",
-    "CIJ", "GAF", "GPEC", "GPAG", "GAB SEFAZ", "GCOINF", "GAB SEFIN"
-  ]
   // Atualiza os funcionários com MES_FORMATADO e SALDO
+
   const mapFuncionariosComMes = (funcs: Funcionario[], ferias: Gozo[]) => {
     return funcs.map(f => {
       const feriasFuncionario = ferias.find(g => g.ID === f.ID_PERIODO);
+
       let mesFormatado = '-';
       let diaEMes = '-';
+      let fimFormatado = '-';
 
-      if (feriasFuncionario?.MES) {
-        const data = new Date(feriasFuncionario.MES);
-        // Para o select: apenas o mês
-        mesFormatado = data.toLocaleString('pt-BR', { month: 'long' });
+      if (feriasFuncionario?.MES_INICIO) {
+        const inicio = parseISO(feriasFuncionario.MES_INICIO); // data ISO real
+        diaEMes = format(inicio, "dd/MM", { locale: ptBR });
+        mesFormatado = format(inicio, "MMMM", { locale: ptBR }); // mês por extenso
+      }
 
-        // Para a tabela: dia e mês
-        diaEMes = data.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit' });
+
+
+      if (feriasFuncionario?.MES_FIM) {
+        const fim = parseISO(feriasFuncionario.MES_FIM);
+        fimFormatado = format(fim, 'dd/MM');
       }
 
       return {
         ...f,
-        MES_FORMATADO: mesFormatado, // usado no filtro/select
-        DIA_EM_MES: diaEMes,         // novo campo para tabela
-        SALDO: feriasFuncionario ? feriasFuncionario.SALDO : '-'
+        MES_FORMATADO: mesFormatado,
+        DIA_EM_MES: diaEMes,
+        SALDO: feriasFuncionario ? feriasFuncionario.SALDO : '-',
+        FIM: fimFormatado,
       };
     });
   };
-
   useEffect(() => {
-    // Buscar gerências
     axios.get('http://localhost:3001/gerencias')
       .then(res => setGerencias(res.data))
       .catch(err => console.error('Erro ao buscar gerências:', err));
 
-    // Buscar funcionários
     axios.get('http://localhost:3001/gerencias/funcionarios')
       .then(res => setFuncionarios(res.data))
       .catch(err => console.error('Erro ao buscar funcionários:', err));
 
-    // Buscar funcionários em férias
     axios.get('http://localhost:3001/gerencias/emferias')
       .then(res => setFuncionariosEmFerias(res.data))
-      .catch(err => console.error(err));
+      .catch(err => console.error('Erro ao buscar funcionários em férias:', err));
   }, []);
 
-  // Atualiza filteredFuncionarios sempre que funcionarios ou funcionariosEmFerias mudam
   useEffect(() => {
     const funcsComMes = mapFuncionariosComMes(funcionarios, funcionariosEmFerias);
     setFilteredFuncionarios(funcsComMes);
@@ -101,16 +104,11 @@ const Gerencias: React.FC = () => {
   const handleFilter = (sigla: string) => {
     setSelectedSigla(sigla);
 
-    if (sigla === '') {
-      const funcsComMes = mapFuncionariosComMes(funcionarios, funcionariosEmFerias);
-      setFilteredFuncionarios(funcsComMes);
+    if (!sigla) {
+      setFilteredFuncionarios(mapFuncionariosComMes(funcionarios, funcionariosEmFerias));
     } else {
-      axios.get(`http://localhost:3001/gerencias/${sigla}/funcionarios`)
-        .then(res => {
-          const funcsComMes = mapFuncionariosComMes(res.data, funcionariosEmFerias);
-          setFilteredFuncionarios(funcsComMes);
-        })
-        .catch(err => console.error('Erro ao filtrar funcionários:', err));
+      const filtered = funcionarios.filter(f => f.SIGLA_GERENCIA === sigla);
+      setFilteredFuncionarios(mapFuncionariosComMes(filtered, funcionariosEmFerias));
     }
   };
 
@@ -160,12 +158,13 @@ const Gerencias: React.FC = () => {
         <table className="w-full text-sm text-black text-center border mt-4">
           <thead className="bg-gray-200">
             <tr>
-              <th className="p-2 text-center">Matrícula</th>
-              <th className="p-2 text-center">Nome</th>
-              <th className="p-2 text-center">Gerência</th>
-              <th className="p-2 text-center">Período</th>
-              <th className="p-2 text-center">Saldo</th>
-              <th className="p-2 text-center">Dia/Mês</th>
+              <th className="p-2">Matrícula</th>
+              <th className="p-2">Nome</th>
+              <th className="p-2">Gerência</th>
+              <th className="p-2">Período</th>
+              <th className="p-2">Saldo</th>
+              <th className="p-2">Início</th>
+              <th className="p-2">Fim</th>
             </tr>
           </thead>
           <tbody>
@@ -174,13 +173,13 @@ const Gerencias: React.FC = () => {
               .sort((a, b) => (a.NOME || '').localeCompare(b.NOME || ''))
               .map(f => (
                 <tr key={f.MATRICULA_F}>
-                  <td className='p-2 text-center'>{f.MATRICULA_F}</td>
-                  <td className='p-2 text-center'>{f.NOME}</td>
-                  <td className='p-2 text-center'>{f.SIGLA_GERENCIA}</td>
-                  <td className='p-2 text-center'>{f.PERIODO_AQUISITIVO_EM_ABERTO}</td>
-
-                  <td>{f.SALDO || '-'}</td>
-                  <td>{f.DIA_EM_MES || '-'}</td>
+                  <td className="p-2">{f.MATRICULA_F}</td>
+                  <td className="p-2">{f.NOME}</td>
+                  <td className="p-2">{f.SIGLA_GERENCIA}</td>
+                  <td className="p-2">{f.PERIODO_AQUISITIVO_EM_ABERTO}</td>
+                  <td className="p-2">{f.SALDO || '-'}</td>
+                  <td className="p-2">{f.DIA_EM_MES || '-'}</td>
+                  <td className="p-2">{f.FIM || '-'}</td>
                 </tr>
               ))}
           </tbody>
