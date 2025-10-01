@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Header from './Header';
 import axios from 'axios';
-import { parseISO, format, isValid } from 'date-fns';
+import { parseISO, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface Gerencia {
@@ -29,8 +29,8 @@ interface Funcionario {
 
 interface Gozo {
   ID: string;
-  MES_INICIO: string;   // dd/MM/yyyy
-  MES_FIM: string;      // dd/MM/yyyy
+  MES_INICIO: string;
+  MES_FIM: string;
   TIPO: string;
   PERCEPCAO: string;
   ANO: string;
@@ -44,13 +44,12 @@ const Gerencias: React.FC = () => {
   const [filteredFuncionarios, setFilteredFuncionarios] = useState<Funcionario[]>([]);
   const [selectedSigla, setSelectedSigla] = useState<string>('');
   const [selectedMes, setSelectedMes] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const meses = [
     "", "janeiro", "fevereiro", "março", "abril", "maio", "junho",
     "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"
   ];
-
-  // Atualiza os funcionários com MES_FORMATADO e SALDO
 
   const mapFuncionariosComMes = (funcs: Funcionario[], ferias: Gozo[]) => {
     return funcs.map(f => {
@@ -66,8 +65,6 @@ const Gerencias: React.FC = () => {
         mesFormatado = format(inicio, "MMMM", { locale: ptBR }); // mês por extenso
       }
 
-
-
       if (feriasFuncionario?.MES_FIM) {
         const fim = parseISO(feriasFuncionario.MES_FIM);
         fimFormatado = format(fim, 'dd/MM');
@@ -82,6 +79,7 @@ const Gerencias: React.FC = () => {
       };
     });
   };
+
   useEffect(() => {
     axios.get('http://localhost:3001/gerencias')
       .then(res => setGerencias(res.data))
@@ -98,20 +96,26 @@ const Gerencias: React.FC = () => {
 
   useEffect(() => {
     const funcsComMes = mapFuncionariosComMes(funcionarios, funcionariosEmFerias);
-    setFilteredFuncionarios(funcsComMes);
-  }, [funcionarios, funcionariosEmFerias]);
+    const filtered = funcsComMes.filter(f =>
+      (selectedSigla === '' || f.SIGLA_GERENCIA === selectedSigla) &&
+      (selectedMes === '' || f.MES_FORMATADO?.toLowerCase() === selectedMes.toLowerCase()) &&
+      (searchQuery === '' || f.NOME.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+    setFilteredFuncionarios(filtered);
+  }, [funcionarios, funcionariosEmFerias, selectedSigla, selectedMes, searchQuery]);
 
-  const handleFilter = (sigla: string) => {
+  const handleFilterByGerencia = (sigla: string) => {
     setSelectedSigla(sigla);
-
-    if (!sigla) {
-      setFilteredFuncionarios(mapFuncionariosComMes(funcionarios, funcionariosEmFerias));
-    } else {
-      const filtered = funcionarios.filter(f => f.SIGLA_GERENCIA === sigla);
-      setFilteredFuncionarios(mapFuncionariosComMes(filtered, funcionariosEmFerias));
-    }
   };
 
+  const handleFilterByMes = (mes: string) => {
+    setSelectedMes(mes);
+  };
+
+  const handleSearchByName = (query: string) => {
+    setSearchQuery(query);
+  };
+  
   return (
     <div className="min-h-screen bg-gray-100">
       <Header />
@@ -120,38 +124,52 @@ const Gerencias: React.FC = () => {
           Funcionários por Gerência
         </h1>
 
-        {/* Filtro por Gerência */}
-        <div className="flex gap-4 items-center mb-4">
-          <label className="font-semibold text-gray-700">Filtrar por Gerência:</label>
-          <select
-            onChange={(e) => handleFilter(e.target.value)}
-            value={selectedSigla}
-            className="p-2 border border-gray-300 text-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Todas</option>
-            {gerencias.map(g => (
-              <option key={g.ID_GERENCIA} value={g.SIGLA_GERENCIA}>
-                {g.GERENCIA}
-              </option>
-            ))}
-          </select>
-        </div>
+        <div className="flex flex-wrap gap-4 items-center mb-4">
+          {/* Filtro por Gerência */}
+          <div className="flex gap-4 items-center">
+            <label className="font-semibold text-gray-700">Filtrar por Gerência:</label>
+            <select
+              onChange={(e) => handleFilterByGerencia(e.target.value)}
+              value={selectedSigla}
+              className="p-2 border border-gray-300 text-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Todas</option>
+              {gerencias.map(g => (
+                <option key={g.ID_GERENCIA} value={g.SIGLA_GERENCIA}>
+                  {g.GERENCIA}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Filtro por Mês */}
+          <div className="flex gap-4 items-center">
+            <label className="font-semibold text-gray-700">Filtrar por Mês:</label>
+            <select
+              onChange={(e) => handleFilterByMes(e.target.value)}
+              value={selectedMes}
+              className="p-2 border border-gray-300 text-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Todos</option>
+              {meses.slice(1).map((mes) => (
+                <option key={mes} value={mes}>
+                  {mes.charAt(0).toUpperCase() + mes.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/* Filtro por Mês */}
-        <div className="flex gap-4 items-center mb-4">
-          <label className="font-semibold text-gray-700">Filtrar por Mês:</label>
-          <select
-            onChange={(e) => setSelectedMes(e.target.value)}
-            value={selectedMes}
-            className="p-2 border border-gray-300 text-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Todos</option>
-            {meses.slice(1).map((mes) => (
-              <option key={mes} value={mes}>
-                {mes.charAt(0).toUpperCase() + mes.slice(1)}
-              </option>
-            ))}
-          </select>
+          {/* Filtro por Nome */}
+          <div className="flex gap-4 items-center">
+            <label className="font-semibold text-gray-700">Pesquisar por Nome:</label>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => handleSearchByName(e.target.value)}
+              placeholder="Nome"
+              className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+            />
+          </div>
         </div>
 
         {/* Tabela */}
@@ -169,7 +187,6 @@ const Gerencias: React.FC = () => {
           </thead>
           <tbody>
             {filteredFuncionarios
-              .filter(f => !selectedMes || f.MES_FORMATADO?.toLowerCase() === selectedMes.toLowerCase())
               .sort((a, b) => (a.NOME || '').localeCompare(b.NOME || ''))
               .map(f => (
                 <tr key={f.MATRICULA_F}>

@@ -22,6 +22,7 @@ interface RawEmployee {
   MES_INICIO?: string;
   MES_FIM?: string;
   SALDO?: string | number;
+  PERCEPCAO?: string
   // campos extras possíveis:
   [k: string]: any;
 }
@@ -30,9 +31,9 @@ interface Employee {
   MATRICULA_F: string;
   NOME: string;
   SIGLA_GERENCIA: string;
-  MES_INICIO?: string | null;
-  MES_FIM?: string | null;
-  SALDO?: string | number | null;
+  MES_INICIO?: string;
+  MES_FIM?: string ;
+  SALDO?: string | number;
 }
 
 const DashboardPage: React.FC = () => {
@@ -137,7 +138,7 @@ const DashboardPage: React.FC = () => {
       feriasSolicitadas: [
         "http://localhost:3001/tela/funcionarios/ferias-solicitadas",
         "http://localhost:3001/funcionarios/ferias-solicitadas",
-        "http://localhost:3001/solicitacoes/pendentes"
+        "http://localhost:3001/soli"
       ],
     };
 
@@ -180,10 +181,11 @@ const DashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white flow-root ">
       <Header />
-      <h2 className="text-2xl font-bold mb-6 text-center text-[#023472]">
+      <h2 className="mt-10 text-2xl font-bold mb-6 text-center text-[#023472]">
         Resumo de Férias - SEREC
+
       </h2>
 
       <div className="flex flex-wrap gap-6 justify-center">
@@ -218,7 +220,7 @@ const DashboardPage: React.FC = () => {
           onClick={() => setSelectedCard(null)}
         >
           <div
-            className="bg-white rounded-lg shadow-lg max-w-5xl w-[95%] p-6 relative"
+            className="bg-white rounded-lg text-black shadow-lg max-w-5xl w-[95%] p-6 relative"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"

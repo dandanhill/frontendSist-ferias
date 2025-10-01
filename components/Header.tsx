@@ -27,6 +27,7 @@ const Header: React.FC = () => {
                     <i className="fas fa-plus"></i>
                     <span>Cadastrar</span>
                 </Link>
+
                 
             </nav>
             <div className="flex items-center space-x-4">
